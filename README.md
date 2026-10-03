@@ -2,8 +2,8 @@
 
 
 
-## AWS | K3S Dynamic Environment
-K3s as a lightweight and certified Kubernetes distribution developed by Rancher Labs (now part of SUSE). Designed to streamline deployments in edge computing, IoT, and local development scenarios, K3s provides a simplified alternative to traditional Kubernetes. By consolidating essential components into a single, efficient binary, K3s aims to maintain core Kubernetes functionalities while reducing the overhead typically associated with deployment and management.
+## AWS | K3S Static Environment
+Static Kubernetes Environment: infrastructure is persistent and application lifecycle is automated independently of infrastructure lifecycle.
 
 
 🎯  Installation and Integration
