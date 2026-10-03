@@ -31,7 +31,7 @@ export no_proxy="$NO_PROXY"
 if [ "$NODE_INDEX" -eq 0 ]; then
 
   echo "[+] Installing first master (cluster-init)"
-
+  sudo apt-get install -y open-iscsi nfs-common || true
   curl -sfL https://get.k3s.io | \
     INSTALL_K3S_VERSION="$K3S_VERSION" \
     INSTALL_K3S_EXEC="server \
@@ -140,7 +140,8 @@ else
   if [ "$NODE_INDEX" -lt "$MASTER_COUNT" ]; then
 
     echo "[+] Joining as additional master"
-
+    sudo apt-get install -y open-iscsi nfs-common || true
+    
     curl -sfL https://get.k3s.io | \
       INSTALL_K3S_VERSION="$K3S_VERSION" \
       K3S_URL="https://${MASTER_IP}:6443" \
@@ -159,6 +160,7 @@ else
   else
 
     echo "[+] Joining as worker"
+    sudo apt-get install -y open-iscsi nfs-common || true
 
     curl -sfL https://get.k3s.io | \
       INSTALL_K3S_VERSION="$K3S_VERSION" \
@@ -250,6 +252,27 @@ if [ "$NODE_INDEX" -eq 0 ]; then
   --type='json' \
   -p='[{"op":"add","path":"/spec/template/spec/containers/0/args/-","value":"--insecure"}]'
   kubectl rollout status deployment/argocd-server -n argocd
+
+  sleep 5
+  helm repo add longhorn https://charts.longhorn.io
+  helm repo update
+
+  helm upgrade --install longhorn longhorn/longhorn \
+  --namespace longhorn-system \
+  --create-namespace \
+  --set defaultSettings.defaultDataPath=/var/lib/longhorn \
+  --set defaultSettings.defaultReplicaCount=1 \
+  --set defaultSettings.replicaSoftAntiAffinity=false \
+  --set defaultSettings.replicaZoneSoftAntiAffinity=false \
+  --set defaultSettings.replicaAutoBalance=least-effort \
+  --set defaultSettings.storageMinimalAvailablePercentage=25 \
+  --set defaultSettings.storageOverProvisioningPercentage=100 \
+  --set defaultSettings.createDefaultDiskLabeledNodes=true \
+  --set defaultSettings.disableSchedulingOnCordonedNode=true \
+  --set persistence.defaultClass=true \
+  --set persistence.defaultClassReplicaCount=1 \
+  --set persistence.defaultFsType=ext4 \
+  --set persistence.defaultDataLocality=disabled
   
   echo ""
   echo "[+] K3s bootstrap completed successfully"
